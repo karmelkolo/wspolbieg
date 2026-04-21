@@ -8,16 +8,20 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Diagnostics;
+
 namespace TP.ConcurrentProgramming.Data
 {
     internal class Ball : IBall
     {
         #region ctor
 
-        internal Ball(Vector initialPosition, Vector initialVelocity)
+        internal Ball(Vector initialPosition, Vector initialVelocity, double borderWidth, double borderHeight)
         {
             Position = initialPosition;
             Velocity = initialVelocity;
+            BorderWidth = borderWidth;
+            BorderHeight = borderHeight;
         }
 
         #endregion ctor
@@ -33,6 +37,8 @@ namespace TP.ConcurrentProgramming.Data
         #region private
 
         private Vector Position;
+        private double BorderWidth;
+        private double BorderHeight;
 
         private void RaiseNewPositionChangeNotification()
         {
@@ -41,8 +47,12 @@ namespace TP.ConcurrentProgramming.Data
 
         internal void Move(Vector delta)
         {
-            Position = new Vector(Position.x + delta.x, Position.y + delta.y);
-            RaiseNewPositionChangeNotification();
+            Vector NewPosition = new Vector(Position.x + delta.x, Position.y + delta.y);
+            if (NewPosition.x > 0 && NewPosition.y > 0 && NewPosition.y < BorderWidth-30 && NewPosition.x < BorderHeight-30)
+            {
+                Position = NewPosition;
+                RaiseNewPositionChangeNotification();
+            }
         }
 
         #endregion private
