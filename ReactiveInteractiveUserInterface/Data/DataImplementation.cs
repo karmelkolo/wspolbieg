@@ -18,7 +18,11 @@ namespace TP.ConcurrentProgramming.Data
 
         public DataImplementation()
         {
+<<<<<<< HEAD
             MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(5));
+=======
+            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(16));
+>>>>>>> 6c4ef29affc03f60827b986117821de1e2dc3865
         }
 
         #endregion ctor
@@ -81,7 +85,7 @@ namespace TP.ConcurrentProgramming.Data
         private void Move(object? x)
         {
             foreach (Ball item in BallsList)
-                item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 10, (RandomGenerator.NextDouble() - 0.5) * 10));
+                item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 2, (RandomGenerator.NextDouble() - 0.5) * 2));
         }
 
         #endregion private
