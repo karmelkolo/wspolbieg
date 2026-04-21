@@ -65,5 +65,19 @@ namespace TP.ConcurrentProgramming.Data.Test
                 newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(10, x));
             }
         }
+
+        [TestMethod]
+        public void Test_BallStaysInBounds()
+        {
+            Vector startPosition = new Vector(395.0, 200.0);
+            Ball ball = new Ball(startPosition, new Vector(0.0, 0.0));
+            IVector currentPosition = startPosition;
+
+            ball.NewPositionNotification += (sender, pos) => { currentPosition = pos; };
+
+            ball.Move(new Vector(50.0, 0.0));
+
+            Assert.IsTrue(currentPosition.x <= 390.0, "Ball out of bounds");
+        }
     }
 }
