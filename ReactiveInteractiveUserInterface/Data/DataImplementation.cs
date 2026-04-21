@@ -19,7 +19,7 @@ namespace TP.ConcurrentProgramming.Data
 
     public DataImplementation()
     {
-      MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+      MoveTimer = new Timer(Move, null, Timeout.InfiniteTimeSpan, TimeSpan.FromMilliseconds(100));
     }
 
     #endregion ctor
@@ -33,6 +33,7 @@ namespace TP.ConcurrentProgramming.Data
       if (upperLayerHandler == null)
         throw new ArgumentNullException(nameof(upperLayerHandler));
       Random random = new Random();
+      BallsList.Clear();
       for (int i = 0; i < numberOfBalls; i++)
       {
         Vector startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
@@ -40,6 +41,7 @@ namespace TP.ConcurrentProgramming.Data
         upperLayerHandler(startingPosition, newBall);
         BallsList.Add(newBall);
       }
+      MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
     }
 
     #endregion DataAbstractAPI

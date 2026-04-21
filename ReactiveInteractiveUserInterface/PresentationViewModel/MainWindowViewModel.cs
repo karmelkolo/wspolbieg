@@ -8,6 +8,7 @@
 //__________________________________________________________________________________________
 
 using System;
+using System.Windows.Input;
 using System.Collections.ObjectModel;
 using TP.ConcurrentProgramming.Presentation.Model;
 using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
@@ -17,36 +18,55 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 {
   public class MainWindowViewModel : ViewModelBase, IDisposable
   {
-    #region ctor
+        #region ctor
+        public MainWindowViewModel() : this(null) { }
 
-    public MainWindowViewModel() : this(null)
-    { }
+        internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
+        {
+            ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
+            Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+            
+            StartCommand = new RelayCommand(() => Start(NumberOfBalls));
+        }
+        #endregion ctor
 
-    internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
-    {
-      ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
-      Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
-    }
+        
+        #region Właściwości bindowane do UI
 
-    #endregion ctor
+        private int _numberOfBalls;
+        public int NumberOfBalls
+        {
+            get => _numberOfBalls;
+            set
+            {
+                _numberOfBalls = value;
+                RaisePropertyChanged(nameof(NumberOfBalls));
+            }
+        }
 
-    #region public API
+        public ICommand StartCommand { get; }
 
-    public void Start(int numberOfBalls)
-    {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(MainWindowViewModel));
-      ModelLayer.Start(numberOfBalls);
-      Observer.Dispose();
-    }
+        #endregion Właściwości bindowane do UI
 
-    public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
+        #region public API
 
-    #endregion public API
+        public void Start(int numberOfBalls)
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(MainWindowViewModel));
+            Balls.Clear();
+            Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+            ModelLayer.Start(numberOfBalls);
+            Observer.Dispose();
+        }
 
-    #region IDisposable
+        public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
 
-    protected virtual void Dispose(bool disposing)
+        #endregion public API
+
+        #region IDisposable
+
+        protected virtual void Dispose(bool disposing)
     {
       if (!Disposed)
       {
