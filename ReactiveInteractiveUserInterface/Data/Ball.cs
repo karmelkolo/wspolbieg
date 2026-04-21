@@ -8,8 +8,6 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System.Diagnostics;
-
 namespace TP.ConcurrentProgramming.Data
 {
     internal class Ball : IBall
@@ -50,3 +48,4 @@ namespace TP.ConcurrentProgramming.Data
         #endregion private
     }
 }
+

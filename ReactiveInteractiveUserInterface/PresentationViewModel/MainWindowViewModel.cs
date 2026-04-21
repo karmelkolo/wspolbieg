@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using TP.ConcurrentProgramming.Presentation.Model;
 using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
 using ModelIBall = TP.ConcurrentProgramming.Presentation.Model.IBall;
@@ -26,9 +27,28 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         {
             ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
             Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+
+            StartCommand = new RelayCommand(() => Start(NumberOfBalls));
+        }
+        #endregion ctor
+
+
+        #region Właściwości bindowane do UI
+
+        private int _numberOfBalls;
+        public int NumberOfBalls
+        {
+            get => _numberOfBalls;
+            set
+            {
+                _numberOfBalls = value;
+                RaisePropertyChanged(nameof(NumberOfBalls));
+            }
         }
 
-        #endregion ctor
+        public ICommand StartCommand { get; }
+
+        #endregion Właściwości bindowane do UI
 
         #region public API
 
@@ -36,6 +56,8 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(MainWindowViewModel));
+            Balls.Clear();
+            Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
             ModelLayer.Start(numberOfBalls);
             Observer.Dispose();
         }
