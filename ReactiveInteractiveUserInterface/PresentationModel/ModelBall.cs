@@ -69,7 +69,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
 
         private void NewPositionNotification(object sender, IPosition e)
         {
-            Top = e.x; Left = e.y;
+            Top = e.y; Left = e.x;
         }
 
         private void RaisePropertyChanged([CallerMemberName] string propertyName = "")

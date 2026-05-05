@@ -16,7 +16,7 @@ namespace TP.ConcurrentProgramming.Data
     {
         #region ctor
 
-        internal Ball(Vector initialPosition, Vector initialVelocity, double borderWidth, double borderHeight)
+        internal Ball(Vector initialPosition, Vector initialVelocity, int borderWidth, int borderHeight)
         {
             Position = initialPosition;
             Velocity = initialVelocity;
@@ -37,22 +37,33 @@ namespace TP.ConcurrentProgramming.Data
         #region private
 
         private Vector Position;
-        private double BorderWidth;
-        private double BorderHeight;
+        private int BorderWidth;
+        private int BorderHeight;
 
         private void RaiseNewPositionChangeNotification()
         {
             NewPositionNotification?.Invoke(this, Position);
         }
 
-        internal void Move(Vector delta)
+        internal void Move()
         {
-            Vector NewPosition = new Vector(Position.x + delta.x, Position.y + delta.y);
-            if (NewPosition.x > 0 && NewPosition.y > 0 && NewPosition.y < BorderWidth-30 && NewPosition.x < BorderHeight-30)
+            Vector nextPosition = new Vector(Position.x + Velocity.x, Position.y + Velocity.y);
+            if (nextPosition.x <= 0 || nextPosition.x >= BorderWidth - 20)
             {
-                Position = NewPosition;
-                RaiseNewPositionChangeNotification();
+                Velocity = new Vector(-Velocity.x, Velocity.y);
+                double clampedX = Math.Clamp(nextPosition.x, 0, BorderWidth - 20);
+                nextPosition = new(clampedX, nextPosition.y);
             }
+
+            if (nextPosition.y <= 0 || nextPosition.y >= BorderHeight - 20)
+            {
+                Velocity = new Vector(Velocity.x, -Velocity.y);
+                double clampedY = Math.Clamp(nextPosition.y, 0, BorderHeight - 20);
+                nextPosition = new(nextPosition.x, clampedY);
+            }
+
+            Position = nextPosition;
+            RaiseNewPositionChangeNotification();
         }
 
         #endregion private

@@ -17,20 +17,47 @@ namespace TP.ConcurrentProgramming.Data.Test
         public void ConstructorTestMethod()
         {
             Vector testinVector = new Vector(0.0, 0.0);
-            Ball newInstance = new(testinVector, testinVector);
+            Ball newInstance = new(testinVector, testinVector, 0, 0);
         }
 
         [TestMethod]
         public void MoveTestMethod()
         {
             Vector initialPosition = new(10.0, 10.0);
-            Ball newInstance = new(initialPosition, new Vector(0.0, 0.0));
+            Ball newInstance = new(initialPosition, new Vector(0.0, 0.0), 100, 100);
             IVector curentPosition = new Vector(0.0, 0.0);
             int numberOfCallBackCalled = 0;
             newInstance.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); curentPosition = position; numberOfCallBackCalled++; };
-            newInstance.Move(new Vector(0.0, 0.0));
+            newInstance.Move();
             Assert.AreEqual<int>(1, numberOfCallBackCalled);
             Assert.AreEqual<IVector>(initialPosition, curentPosition);
+        }
+
+        [TestMethod]
+        public void StayInBoundsTestMethod()
+        {
+            Vector initialPositionTopLeft = new(0, 0);
+            Vector initialPositionBottomRight = new(100, 100);
+            Ball TopBall = new(initialPositionTopLeft, new Vector(0, -5), 100, 100);
+            Ball LeftBall = new(initialPositionTopLeft, new Vector(-5, 0), 100, 100);
+            Ball BottomBall = new(initialPositionBottomRight, new Vector(0, 5), 100, 100);
+            Ball RightBall = new(initialPositionBottomRight, new Vector(5, 0), 100, 100);
+            IVector TopBallPosition = new Vector(0.0, 0.0);
+            IVector LeftBallPosition = new Vector(0.0, 0.0);
+            IVector BottomBallPosition = new Vector(0.0, 0.0);
+            IVector RightBallPosition = new Vector(0.0, 0.0);
+            TopBall.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender);  TopBallPosition = position; };
+            LeftBall.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); LeftBallPosition = position; };
+            BottomBall.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); BottomBallPosition = position; };
+            RightBall.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); RightBallPosition = position; };
+            TopBall.Move();
+            LeftBall.Move();
+            BottomBall.Move();
+            RightBall.Move();
+            Assert.IsTrue(TopBallPosition.y >= 0);
+            Assert.IsTrue(LeftBallPosition.x >= 0);
+            Assert.IsTrue(BottomBallPosition.y <= 100);
+            Assert.IsTrue(RightBallPosition.x <= 100);
         }
     }
 }

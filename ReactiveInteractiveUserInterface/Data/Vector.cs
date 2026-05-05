@@ -14,7 +14,7 @@ namespace TP.ConcurrentProgramming.Data
     /// <summary>
     ///  Two dimensions immutable vector
     /// </summary>
-    internal record Vector : IVector
+    internal struct Vector : IVector
     {
         #region IVector
 

@@ -44,7 +44,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
         }
 
-        public override void Start(int numberOfBalls, double borderWidth, double borderHeight)
+        public override void Start(int numberOfBalls, int borderWidth, int borderHeight)
         {
             layerBellow.Start(numberOfBalls, StartHandler, borderWidth, borderHeight);
         }

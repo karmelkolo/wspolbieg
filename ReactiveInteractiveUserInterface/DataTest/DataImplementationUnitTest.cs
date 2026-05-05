@@ -42,7 +42,7 @@ namespace TP.ConcurrentProgramming.Data.Test
             Assert.IsNotNull(ballsList);
             newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(0, x));
             Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
-            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
+            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }, 0, 0));
         }
 
         [TestMethod]
@@ -60,24 +60,13 @@ namespace TP.ConcurrentProgramming.Data.Test
                       Assert.IsTrue(startingPosition.x >= 0);
                       Assert.IsTrue(startingPosition.y >= 0);
                       Assert.IsNotNull(ball);
-                  });
+                  },
+                  100,
+                  100
+                  );
                 Assert.AreEqual<int>(numberOfBalls2Create, numberOfCallbackInvoked);
                 newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(10, x));
             }
-        }
-
-        [TestMethod]
-        public void Test_BallStaysInBounds()
-        {
-            Vector startPosition = new Vector(395.0, 200.0);
-            Ball ball = new Ball(startPosition, new Vector(0.0, 0.0));
-            IVector currentPosition = startPosition;
-
-            ball.NewPositionNotification += (sender, pos) => { currentPosition = pos; };
-
-            ball.Move(new Vector(50.0, 0.0));
-
-            Assert.IsTrue(currentPosition.x <= 390.0, "Ball out of bounds");
         }
     }
 }

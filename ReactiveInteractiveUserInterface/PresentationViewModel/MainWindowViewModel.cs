@@ -57,9 +57,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             if (Disposed)
                 throw new ObjectDisposedException(nameof(MainWindowViewModel));
             Balls.Clear();
-            Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
             ModelLayer.Start(numberOfBalls, borderWidth, borderHeight);
-            Observer.Dispose();
         }
 
         public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
@@ -100,8 +98,8 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         private IDisposable Observer = null;
         private ModelAbstractApi ModelLayer;
         private bool Disposed = false;
-        private double borderWidth = 400;
-        private double borderHeight = 420;
+        private int borderWidth = 390;
+        private int borderHeight = 410;
 
         #endregion private
     }

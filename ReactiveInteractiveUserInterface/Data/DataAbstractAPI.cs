@@ -23,7 +23,7 @@ namespace TP.ConcurrentProgramming.Data
 
         #region public API
 
-        public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler, double borderWidth, double borderHeight);
+        public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler, int borderWidth, int borderHeight);
 
         #endregion public API
 
