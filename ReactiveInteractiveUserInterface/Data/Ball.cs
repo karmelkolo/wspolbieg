@@ -32,11 +32,12 @@ namespace TP.ConcurrentProgramming.Data
 
         public IVector Velocity { get; set; }
 
+        public IVector Position { get; private set; }
+
         #endregion IBall
 
         #region private
 
-        private Vector Position;
         private int BorderWidth;
         private int BorderHeight;
 

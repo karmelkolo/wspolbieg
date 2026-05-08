@@ -39,13 +39,18 @@ namespace TP.ConcurrentProgramming.Data
                 for (int i = 0; i < numberOfBalls; i++)
                 {
                     Vector startingPosition = new(random.Next(0, borderWidth - 20), random.Next(0, borderHeight - 20));
-                    Vector startingVelocity = new(random.Next(1, 5), random.Next(1, 5));
+                    Vector startingVelocity = new(random.Next(-5, 5), random.Next(-5, 5));
                     Ball newBall = new(startingPosition, startingVelocity, borderWidth, borderHeight);
                     upperLayerHandler(startingPosition, newBall);
                     BallsList.Add(newBall);
                 }
             }
 
+        }
+
+        public override IEnumerable<IBall> GetBalls()
+        {
+            return BallsList;
         }
 
         #endregion DataAbstractAPI

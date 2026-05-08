@@ -61,5 +61,9 @@ namespace TP.ConcurrentProgramming.BusinessLogic
     public interface IBall
     {
         event EventHandler<IPosition> NewPositionNotification;
+
+        IPosition Position { get; }
     }
+
+    internal readonly record struct LogicVector(double x, double y) : Data.IVector;
 }
