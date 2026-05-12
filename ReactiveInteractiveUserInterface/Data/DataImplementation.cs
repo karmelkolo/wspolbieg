@@ -40,6 +40,10 @@ namespace TP.ConcurrentProgramming.Data
                 {
                     Vector startingPosition = new(random.Next(0, borderWidth - 20), random.Next(0, borderHeight - 20));
                     Vector startingVelocity = new(random.Next(-5, 5), random.Next(-5, 5));
+                    if (startingVelocity.x == 0 && startingVelocity.y == 0)
+                    {
+                        startingVelocity = new(1, 1);
+                    }
                     Ball newBall = new(startingPosition, startingVelocity, borderWidth, borderHeight);
                     upperLayerHandler(startingPosition, newBall);
                     BallsList.Add(newBall);
