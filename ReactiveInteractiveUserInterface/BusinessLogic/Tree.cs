@@ -1,4 +1,5 @@
-﻿using DataIBall = TP.ConcurrentProgramming.Data.IBall;
+﻿using System.Numerics;
+using DataIBall = TP.ConcurrentProgramming.Data.IBall;
 
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
@@ -37,6 +38,8 @@ namespace TP.ConcurrentProgramming.BusinessLogic
     internal class Tree
     {
         private readonly int Capacity;
+        private readonly int MaxDepth;
+        private readonly int CurrentDepth;
         private readonly BoundingBox Boundary;
         private readonly List<DataIBall> BallList;
         private bool Divided;
@@ -46,10 +49,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         private Tree BottomLeft;
         private Tree BottomRight;
 
-        public Tree(BoundingBox boundary, int capacity)
+        public Tree(BoundingBox boundary, int capacity, int currentDepth = 0, int maxDepth = 5)
         {
             Boundary = boundary;
             Capacity = capacity;
+            CurrentDepth = currentDepth;
+            MaxDepth = maxDepth;
             BallList = new List<DataIBall>();
             Divided = false;
         }
@@ -61,7 +66,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
                 return false;
             }
 
-            if (BallList.Count < Capacity && !Divided)
+            if ((BallList.Count < Capacity || CurrentDepth >= MaxDepth) && !Divided)
             {
                 BallList.Add(ball);
                 return true;
@@ -86,11 +91,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             double y = Boundary.Y;
             double halfWidth = Boundary.HalfWidth / 2;
             double halfHeight = Boundary.HalfHeight / 2;
+            int nextDepth = CurrentDepth + 1;
 
-            TopLeft = new Tree(new BoundingBox(x - halfWidth, y - halfHeight, halfWidth, halfHeight), Capacity);
-            TopRight = new Tree(new BoundingBox(x + halfWidth, y - halfHeight, halfWidth, halfHeight), Capacity);
-            BottomLeft = new Tree(new BoundingBox(x - halfWidth, y + halfHeight, halfWidth, halfHeight), Capacity);
-            BottomRight = new Tree(new BoundingBox(x + halfWidth, y + halfHeight, halfWidth, halfHeight), Capacity);
+            TopLeft = new Tree(new BoundingBox(x - halfWidth, y - halfHeight, halfWidth, halfHeight), Capacity, nextDepth, MaxDepth);
+            TopRight = new Tree(new BoundingBox(x + halfWidth, y - halfHeight, halfWidth, halfHeight), Capacity, nextDepth, MaxDepth);
+            BottomLeft = new Tree(new BoundingBox(x - halfWidth, y + halfHeight, halfWidth, halfHeight), Capacity, nextDepth, MaxDepth);
+            BottomRight = new Tree(new BoundingBox(x + halfWidth, y + halfHeight, halfWidth, halfHeight), Capacity, nextDepth, MaxDepth);
 
             Divided = true;
 

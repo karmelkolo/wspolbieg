@@ -50,7 +50,10 @@ namespace TP.ConcurrentProgramming.Data
 
         public override IEnumerable<IBall> GetBalls()
         {
-            return BallsList;
+            lock (_lock)
+            {
+                return new List<IBall>(BallsList);
+            }
         }
 
         #endregion DataAbstractAPI
