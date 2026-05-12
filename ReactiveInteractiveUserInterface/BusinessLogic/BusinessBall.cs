@@ -8,6 +8,7 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class Ball : IBall
@@ -22,7 +23,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 
         public event EventHandler<IPosition>? NewPositionNotification;
 
-        public IPosition Position { get; private set; }
+        public IPosition Position { get; set; }
 
         #endregion IBall
 

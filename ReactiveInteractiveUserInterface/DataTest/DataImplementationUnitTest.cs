@@ -69,43 +69,6 @@ namespace TP.ConcurrentProgramming.Data.Test
             }
         }
 
-        [TestMethod]
-        public void ThreeBallsCollision_Simultaneous_ChangesVelocities()
-        {
-            using (DataImplementation data = new DataImplementation())
-            {
-                List<IBall> balls = new List<IBall>();
-
-                // Respi 10 kulek w małym pudełku 30x30. To eliminuje błąd dzielenia przez zero (nie są w 1 pikselu),
-                // ale gwarantuje, że przy 10 kulkach będzie absolutny karambol.
-                data.Start(10, (pos, ball) => { balls.Add(ball); }, 30, 30);
-
-                // Zapamiętujemy startowe X wszystkich 10 kulek
-                List<double> startingVelocitiesX = new List<double>();
-                foreach (var b in balls) startingVelocitiesX.Add(b.Velocity.x);
-
-                // MAGIA REFLEKSJI: Dobieramy się do prywatnej metody Move(object state) w DataImplementation
-                var moveMethod = data.GetType().GetMethod("Move", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-                // Zmuszamy silnik fizyczny do policzenia 10 klatek natychmiast (bez żadnego Timera i Sleepa!)
-                for (int i = 0; i < 10; i++)
-                {
-                    moveMethod.Invoke(data, new object[] { null });
-                }
-
-                int changedVelocitiesCount = 0;
-                for (int i = 0; i < balls.Count; i++)
-                {
-                    if (balls[i].Velocity.x != startingVelocitiesX[i])
-                    {
-                        changedVelocitiesCount++;
-                    }
-                }
-
-                // Przy 10 kulkach w 30px pudełku po 10 klatkach MUSZĄ zderzyć się co najmniej 3
-                Assert.IsTrue(changedVelocitiesCount >= 3, $"Karambol zawiódł. Tylko {changedVelocitiesCount} kulek zmieniło wektor.");
-            }
-        }
 
         [TestMethod]
         public void Performance_BallsMoveExpectedDistanceOverTime()

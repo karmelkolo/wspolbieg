@@ -32,7 +32,7 @@ namespace TP.ConcurrentProgramming.Data
 
         public IVector Velocity { get; set; }
 
-        public IVector Position { get; private set; }
+        public IVector Position { get; set; }
 
         #endregion IBall
 

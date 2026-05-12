@@ -8,7 +8,6 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System.Numerics;
 using TP.ConcurrentProgramming.Data;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
@@ -62,6 +61,35 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 Assert.IsTrue(dataLayerFixcure.StartCalled);
                 Assert.AreEqual<int>(numberOfBalls2Create, dataLayerFixcure.NumberOfBallseCreated);
             }
+        }
+
+        [TestMethod]
+        public void ThreeBallsCollisionTest()
+        {
+            DataAbstractAPI dataLayer = DataAbstractAPI.GetDataLayer();
+            BusinessLogicImplementation logicLayer = new(dataLayer);
+            logicLayer.Start(3, (pos, ball) => { }, 50000, 50000);
+
+            var dataBalls = dataLayer.GetBalls().ToList();
+
+            dataBalls[0].Position = new TestVector(250, 280);
+            dataBalls[1].Position = new TestVector(224, 235);
+            dataBalls[2].Position = new TestVector(276, 235);
+
+
+            TestVector oldVector1 = new TestVector(0, -5);
+            TestVector oldVector2 = new TestVector(4, 3);
+            TestVector oldVector3 = new TestVector(-4, 3);
+
+            dataBalls[0].Velocity = oldVector1;
+            dataBalls[1].Velocity = oldVector2;
+            dataBalls[2].Velocity = oldVector3;
+
+            Thread.Sleep(150);
+
+            Assert.IsTrue(oldVector1.x != dataBalls[0].Velocity.x || oldVector1.y != dataBalls[0].Velocity.y);
+            Assert.IsTrue(oldVector2.x != dataBalls[1].Velocity.x || oldVector2.y != dataBalls[1].Velocity.y);
+            Assert.IsTrue(oldVector3.x != dataBalls[2].Velocity.x || oldVector3.y != dataBalls[2].Velocity.y);
         }
 
         #region testing instrumentation
@@ -136,7 +164,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             }
         }
 
-
+        private record TestVector(double x, double y) : Data.IVector;
 
         #endregion testing instrumentation
     }
