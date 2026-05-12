@@ -59,5 +59,25 @@ namespace TP.ConcurrentProgramming.Data.Test
             Assert.IsTrue(BottomBallPosition.y <= 100);
             Assert.IsTrue(RightBallPosition.x <= 100);
         }
+
+        [TestMethod]
+        public void BallDVDBounceTest()
+        {
+            int boardWidth = 400;
+            int boardHeight = 400;
+
+            Vector startPosition = new Vector(390, 390);
+
+            Vector startVelocity = new Vector(5, 5);
+
+            Ball ball = new Ball(startPosition, startVelocity, boardWidth, boardHeight);
+
+            ball.Move();
+
+            Vector expectedVelocity = new Vector(-5, -5);
+
+            Assert.AreEqual(expectedVelocity.x, ball.Velocity.x, "Odbicie w osi X nie zadziałało poprawnie!");
+            Assert.AreEqual(expectedVelocity.y, ball.Velocity.y, "Odbicie w osi Y nie zadziałało poprawnie!");
+        }
     }
 }

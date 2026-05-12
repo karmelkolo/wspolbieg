@@ -75,6 +75,11 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             {
                 throw new NotImplementedException();
             }
+
+            public override IEnumerable<Data.IBall> GetBalls()
+            {
+                return new List<Data.IBall>();
+            }
         }
 
         private class DataLayerDisposeFixcure : Data.DataAbstractAPI
@@ -89,6 +94,10 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler, int borderWidth, int borderHeight)
             {
                 throw new NotImplementedException();
+            }
+            public override IEnumerable<Data.IBall> GetBalls()
+            {
+                return new List<Data.IBall>();
             }
         }
 
@@ -115,11 +124,19 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
 
             private class DataBallFixture : Data.IBall
             {
+                public IVector Position { get; set; } = new DataVectorFixture();
                 public IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
                 public event EventHandler<IVector>? NewPositionNotification = null;
             }
+
+            public override IEnumerable<Data.IBall> GetBalls()
+            {
+                return new List<Data.IBall>();
+            }
         }
+
+
 
         #endregion testing instrumentation
     }

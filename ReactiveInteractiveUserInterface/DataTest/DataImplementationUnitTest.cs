@@ -68,5 +68,83 @@ namespace TP.ConcurrentProgramming.Data.Test
                 newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(10, x));
             }
         }
+
+        [TestMethod]
+        public void ThreeBallsCollision_Simultaneous_ChangesVelocities()
+        {
+            using (DataImplementation data = new DataImplementation())
+            {
+                List<IBall> balls = new List<IBall>();
+
+                data.Start(3, (pos, ball) => { balls.Add(ball); }, 21, 21);
+
+                double v0_startX = balls[0].Velocity.x;
+                double v1_startX = balls[1].Velocity.x;
+                double v2_startX = balls[2].Velocity.x;
+
+                System.Threading.Thread.Sleep(100);
+
+                int changedVelocitiesCount = 0;
+
+                if (balls[0].Velocity.x != v0_startX) changedVelocitiesCount++;
+                if (balls[1].Velocity.x != v1_startX) changedVelocitiesCount++;
+                if (balls[2].Velocity.x != v2_startX) changedVelocitiesCount++;
+
+                Assert.IsTrue(changedVelocitiesCount >= 2, "Gwarantowany karambol 3 kul nie zadziałał! Algorytm nie zmienił wektorów.");
+            }
+        }
+
+        [TestMethod]
+        public void Performance_BallsMoveExpectedDistanceOverTime()
+        {
+            double dummy = 0;
+            for (int i = 0; i < 100000; i++) { dummy += Math.Sqrt(i); }
+
+            using (DataImplementation data = new DataImplementation())
+            {
+                List<IBall> balls = new List<IBall>();
+
+                data.Start(1, (pos, ball) => { balls.Add(ball); }, 400, 400);
+                System.Threading.Thread.Sleep(50); 
+
+                double startX = balls[0].Position.x;
+
+                System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+
+                System.Threading.Thread.Sleep(300);
+
+                sw.Stop();
+
+                double endX = balls[0].Position.x;
+                double distanceMoved = Math.Abs(endX - startX);
+
+                Assert.IsTrue(distanceMoved > 0, "Kulka w ogóle się nie poruszyła podczas testu wydajnościowego!");
+
+                Assert.IsTrue(distanceMoved > 5.0, $"Kulka poruszyła się za wolno w czasie {sw.ElapsedMilliseconds} ms!");
+            }
+        }
+
+        [TestMethod]
+        public void Performance_CriticalSectionExecutionTime_IsOptimal()
+        {
+            double dummy = 0;
+            for (int i = 0; i < 100000; i++) { dummy += Math.Sin(i); }
+
+            using (DataImplementation data = new DataImplementation())
+            {
+                data.Start(1, (pos, ball) => { }, 100, 100);
+
+                System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+
+                data.Start(10000, (pos, ball) => { }, 1000, 1000);
+
+                sw.Stop();
+
+                double elapsedMs = sw.Elapsed.TotalMilliseconds;
+
+                Assert.IsTrue(elapsedMs < 50.0,
+                    $"Oczekiwano, że 10k iteracji w sekcji krytycznej zajmie poniżej 50ms. Rzeczywisty czas: {elapsedMs:F2} ms");
+            }
+        }
     }
 }
