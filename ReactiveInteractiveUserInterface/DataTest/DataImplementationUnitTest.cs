@@ -76,18 +76,13 @@ namespace TP.ConcurrentProgramming.Data.Test
             {
                 List<IBall> balls = new List<IBall>();
 
-                // Respi 10 kulek w małym pudełku 30x30. To eliminuje błąd dzielenia przez zero (nie są w 1 pikselu),
-                // ale gwarantuje, że przy 10 kulkach będzie absolutny karambol.
                 data.Start(10, (pos, ball) => { balls.Add(ball); }, 30, 30);
 
-                // Zapamiętujemy startowe X wszystkich 10 kulek
                 List<double> startingVelocitiesX = new List<double>();
                 foreach (var b in balls) startingVelocitiesX.Add(b.Velocity.x);
 
-                // MAGIA REFLEKSJI: Dobieramy się do prywatnej metody Move(object state) w DataImplementation
                 var moveMethod = data.GetType().GetMethod("Move", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                // Zmuszamy silnik fizyczny do policzenia 10 klatek natychmiast (bez żadnego Timera i Sleepa!)
                 for (int i = 0; i < 10; i++)
                 {
                     moveMethod.Invoke(data, new object[] { null });
@@ -102,7 +97,6 @@ namespace TP.ConcurrentProgramming.Data.Test
                     }
                 }
 
-                // Przy 10 kulkach w 30px pudełku po 10 klatkach MUSZĄ zderzyć się co najmniej 3
                 Assert.IsTrue(changedVelocitiesCount >= 3, $"Karambol zawiódł. Tylko {changedVelocitiesCount} kulek zmieniło wektor.");
             }
         }
@@ -120,7 +114,6 @@ namespace TP.ConcurrentProgramming.Data.Test
 
                 var moveMethod = data.GetType().GetMethod("Move", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                // Odpalamy 20 klatek ruchu
                 for (int i = 0; i < 20; i++)
                 {
                     moveMethod.Invoke(data, new object[] { null });
@@ -130,8 +123,6 @@ namespace TP.ConcurrentProgramming.Data.Test
                 double endY = balls[0].Position.y;
                 double distanceMoved = Math.Abs(endX - startX) + Math.Abs(endY - startY);
 
-                // Jeśli wylosowało (0,0) na starcie, kula stoi w miejscu. Traktujemy test jako zaliczony,
-                // bo to loteria Randoma, a nie błąd logiki.
                 if (balls[0].Velocity.x == 0 && balls[0].Velocity.y == 0)
                 {
                     Assert.Inconclusive("Kulka wylosowała wektor (0,0) - ponów test.");
@@ -146,7 +137,7 @@ namespace TP.ConcurrentProgramming.Data.Test
         public void Performance_CriticalSectionExecutionTime_IsOptimal()
         {
             double dummy = 0;
-            for (int i = 0; i < 100000; i++) { dummy += Math.Sin(i); } // Rozgrzewka
+            for (int i = 0; i < 100000; i++) { dummy += Math.Sin(i); }
 
             using (DataImplementation data = new DataImplementation())
             {
@@ -154,16 +145,12 @@ namespace TP.ConcurrentProgramming.Data.Test
 
                 System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
 
-                // 10 000 kulek to ogromne obciążenie jak na testy.
                 data.Start(10000, (pos, ball) => { }, 1000, 1000);
 
                 sw.Stop();
 
                 double elapsedMs = sw.Elapsed.TotalMilliseconds;
 
-                // UWAGA: 50 ms to było za mało dla środowisk testowych i wolniejszych maszyn! 
-                // Podnosimy bezpieczny limit do 200 ms. Jeśli lock() byłby napisany źle, 10k iteracji
-                // zajęłoby ponad sekundę (1000+ ms). 200 ms daje nam gwarancję, że przejdzie za każdym razem.
                 Assert.IsTrue(elapsedMs < 200.0,
                     $"Oczekiwano, że 10k iteracji w sekcji krytycznej zajmie poniżej 200ms. Rzeczywisty czas: {elapsedMs:F2} ms");
             }
