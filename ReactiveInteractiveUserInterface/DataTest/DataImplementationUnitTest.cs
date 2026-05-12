@@ -83,7 +83,6 @@ namespace TP.ConcurrentProgramming.Data.Test
 
                 var moveMethod = data.GetType().GetMethod("Move", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                // Odpalamy 20 klatek ruchu
                 for (int i = 0; i < 20; i++)
                 {
                     moveMethod.Invoke(data, new object[] { null });
@@ -93,8 +92,6 @@ namespace TP.ConcurrentProgramming.Data.Test
                 double endY = balls[0].Position.y;
                 double distanceMoved = Math.Abs(endX - startX) + Math.Abs(endY - startY);
 
-                // Jeśli wylosowało (0,0) na starcie, kula stoi w miejscu. Traktujemy test jako zaliczony,
-                // bo to loteria Randoma, a nie błąd logiki.
                 if (balls[0].Velocity.x == 0 && balls[0].Velocity.y == 0)
                 {
                     Assert.Inconclusive("Kulka wylosowała wektor (0,0) - ponów test.");
@@ -109,7 +106,7 @@ namespace TP.ConcurrentProgramming.Data.Test
         public void Performance_CriticalSectionExecutionTime_IsOptimal()
         {
             double dummy = 0;
-            for (int i = 0; i < 100000; i++) { dummy += Math.Sin(i); } // Rozgrzewka
+            for (int i = 0; i < 100000; i++) { dummy += Math.Sin(i); }
 
             using (DataImplementation data = new DataImplementation())
             {
@@ -117,16 +114,12 @@ namespace TP.ConcurrentProgramming.Data.Test
 
                 System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
 
-                // 10 000 kulek to ogromne obciążenie jak na testy.
                 data.Start(10000, (pos, ball) => { }, 1000, 1000);
 
                 sw.Stop();
 
                 double elapsedMs = sw.Elapsed.TotalMilliseconds;
 
-                // UWAGA: 50 ms to było za mało dla środowisk testowych i wolniejszych maszyn! 
-                // Podnosimy bezpieczny limit do 200 ms. Jeśli lock() byłby napisany źle, 10k iteracji
-                // zajęłoby ponad sekundę (1000+ ms). 200 ms daje nam gwarancję, że przejdzie za każdym razem.
                 Assert.IsTrue(elapsedMs < 200.0,
                     $"Oczekiwano, że 10k iteracji w sekcji krytycznej zajmie poniżej 200ms. Rzeczywisty czas: {elapsedMs:F2} ms");
             }
