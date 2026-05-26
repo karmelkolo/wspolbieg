@@ -42,7 +42,7 @@ namespace TP.ConcurrentProgramming.Data.Test
             Assert.IsNotNull(ballsList);
             newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(0, x));
             Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
-            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }, 0, 0));
+            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
         }
 
         [TestMethod]
@@ -60,9 +60,7 @@ namespace TP.ConcurrentProgramming.Data.Test
                       Assert.IsTrue(startingPosition.x >= 0);
                       Assert.IsTrue(startingPosition.y >= 0);
                       Assert.IsNotNull(ball);
-                  },
-                  100,
-                  100
+                  }
                   );
                 Assert.AreEqual<int>(numberOfBalls2Create, numberOfCallbackInvoked);
                 newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(10, x));
@@ -76,21 +74,31 @@ namespace TP.ConcurrentProgramming.Data.Test
             using (DataImplementation data = new DataImplementation())
             {
                 List<IBall> balls = new List<IBall>();
-                data.Start(1, (pos, ball) => { balls.Add(ball); }, 400, 400);
+                data.Start(1, (pos, ball) => { balls.Add(ball); });
+
+                System.Threading.Thread.Sleep(50);
 
                 double startX = balls[0].Position.x;
                 double startY = balls[0].Position.y;
 
-                var moveMethod = data.GetType().GetMethod("Move", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                int maxAttempts = 50;
+                double distanceMoved = 0;
 
-                for (int i = 0; i < 20; i++)
+                while (maxAttempts > 0)
                 {
-                    moveMethod.Invoke(data, new object[] { null });
-                }
+                    double currentX = balls[0].Position.x;
+                    double currentY = balls[0].Position.y;
 
-                double endX = balls[0].Position.x;
-                double endY = balls[0].Position.y;
-                double distanceMoved = Math.Abs(endX - startX) + Math.Abs(endY - startY);
+                    distanceMoved = Math.Abs(currentX - startX) + Math.Abs(currentY - startY);
+
+                    if (distanceMoved > 5.0)
+                    {
+                        break;
+                    }
+
+                    System.Threading.Thread.Sleep(10);
+                    maxAttempts--;
+                }
 
                 if (balls[0].Velocity.x == 0 && balls[0].Velocity.y == 0)
                 {
@@ -98,7 +106,7 @@ namespace TP.ConcurrentProgramming.Data.Test
                     return;
                 }
 
-                Assert.IsTrue(distanceMoved > 0, "Kulka w ogóle się nie poruszyła pomimo wywołania 20 klatek!");
+                Assert.IsTrue(distanceMoved > 5.0, "Kulka w ogóle się nie poruszyła lub poruszyła się za mało!");
             }
         }
 
@@ -110,11 +118,11 @@ namespace TP.ConcurrentProgramming.Data.Test
 
             using (DataImplementation data = new DataImplementation())
             {
-                data.Start(1, (pos, ball) => { }, 100, 100);
+                data.Start(1, (pos, ball) => { });
 
                 System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
 
-                data.Start(10000, (pos, ball) => { }, 1000, 1000);
+                data.Start(10000, (pos, ball) => { });
 
                 sw.Stop();
 

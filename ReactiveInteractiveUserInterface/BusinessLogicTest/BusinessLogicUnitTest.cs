@@ -9,6 +9,9 @@
 //_____________________________________________________________________________________________________________________________________
 
 using TP.ConcurrentProgramming.Data;
+using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
 {
@@ -39,7 +42,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
             Assert.IsTrue(newInstanceDisposed);
             Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
-            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }, 0, 0));
+            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
             Assert.IsTrue(dataLayerFixcure.Disposed);
         }
 
@@ -53,9 +56,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 int numberOfBalls2Create = 10;
                 newInstance.Start(
                   numberOfBalls2Create,
-                  (startingPosition, ball) => { called++; Assert.IsNotNull(startingPosition); Assert.IsNotNull(ball); },
-                  0,
-                  0
+                  (startingPosition, ball) => { called++; Assert.IsNotNull(startingPosition); Assert.IsNotNull(ball); }
                   );
                 Assert.AreEqual<int>(1, called);
                 Assert.IsTrue(dataLayerFixcure.StartCalled);
@@ -63,34 +64,15 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             }
         }
 
+        // TEST USUNIĘTY: Metoda GetBalls() nie istnieje już w architekturze, 
+        // a niezawodny test na zderzenia znajduje się teraz w DataImplementationUnitTest
+        /*
         [TestMethod]
         public void ThreeBallsCollisionTest()
         {
-            DataAbstractAPI dataLayer = DataAbstractAPI.GetDataLayer();
-            BusinessLogicImplementation logicLayer = new(dataLayer);
-            logicLayer.Start(3, (pos, ball) => { }, 50000, 50000);
-
-            var dataBalls = dataLayer.GetBalls().ToList();
-
-            dataBalls[0].Position = new TestVector(250, 280);
-            dataBalls[1].Position = new TestVector(224, 235);
-            dataBalls[2].Position = new TestVector(276, 235);
-
-
-            TestVector oldVector1 = new TestVector(0, -5);
-            TestVector oldVector2 = new TestVector(4, 3);
-            TestVector oldVector3 = new TestVector(-4, 3);
-
-            dataBalls[0].Velocity = oldVector1;
-            dataBalls[1].Velocity = oldVector2;
-            dataBalls[2].Velocity = oldVector3;
-
-            Thread.Sleep(150);
-
-            Assert.IsTrue(oldVector1.x != dataBalls[0].Velocity.x || oldVector1.y != dataBalls[0].Velocity.y);
-            Assert.IsTrue(oldVector2.x != dataBalls[1].Velocity.x || oldVector2.y != dataBalls[1].Velocity.y);
-            Assert.IsTrue(oldVector3.x != dataBalls[2].Velocity.x || oldVector3.y != dataBalls[2].Velocity.y);
+            // ...
         }
+        */
 
         #region testing instrumentation
 
@@ -99,15 +81,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             public override void Dispose()
             { }
 
-            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
             {
                 throw new NotImplementedException();
             }
 
-            public override IEnumerable<Data.IBall> GetBalls()
-            {
-                return new List<Data.IBall>();
-            }
+            // USUNIĘTO GetBalls()
         }
 
         private class DataLayerDisposeFixcure : Data.DataAbstractAPI
@@ -119,14 +98,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 Disposed = true;
             }
 
-            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
             {
                 throw new NotImplementedException();
             }
-            public override IEnumerable<Data.IBall> GetBalls()
-            {
-                return new List<Data.IBall>();
-            }
+
+            // USUNIĘTO GetBalls()
         }
 
         private class DataLayerStartFixcure : Data.DataAbstractAPI
@@ -137,7 +114,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             public override void Dispose()
             { }
 
-            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
             {
                 StartCalled = true;
                 NumberOfBallseCreated = numberOfBalls;
@@ -155,12 +132,9 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 public IVector Position { get; set; } = new DataVectorFixture();
                 public IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-                public event EventHandler<IVector>? NewPositionNotification = null;
-            }
+                public double Diameter { get; } = 20.0;
 
-            public override IEnumerable<Data.IBall> GetBalls()
-            {
-                return new List<Data.IBall>();
+                public event EventHandler<IVector>? NewPositionNotification = null;
             }
         }
 

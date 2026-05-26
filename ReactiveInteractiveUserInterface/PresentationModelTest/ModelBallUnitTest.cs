@@ -9,6 +9,8 @@
 //_____________________________________________________________________________________________________________________________________
 
 using TP.ConcurrentProgramming.BusinessLogic;
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TP.ConcurrentProgramming.Presentation.Model.Test
 {
@@ -20,7 +22,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
         {
             ModelBall ball = new ModelBall(0.0, 0.0, new BusinessLogicIBallFixture());
             Assert.AreEqual<double>(0.0, ball.Top);
-            Assert.AreEqual<double>(0.0, ball.Top);
+            Assert.AreEqual<double>(0.0, ball.Left);
         }
 
         [TestMethod]
@@ -45,6 +47,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
         private class BusinessLogicIBallFixture : BusinessLogic.IBall
         {
             public IPosition Position { get; set; }
+            public double Diameter { get; } = 20.0;
 
             public event EventHandler<IPosition>? NewPositionNotification;
 

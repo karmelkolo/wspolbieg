@@ -42,7 +42,11 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
                 newInstance.CheckBallChangedEvent(x => Assert.IsTrue(x));
                 IDisposable subscription = newInstance.Subscribe(x => { });
                 newInstance.CheckBallChangedEvent(x => Assert.IsFalse(x));
-                newInstance.Start(10, 100, 100);
+
+                // UWAGA: Jeśli w Presentation.Model klasa ModelImplementation.Start również 
+                // przestała przyjmować wymiary (width, height), to usuń poniższe 100, 100
+                newInstance.Start(10);
+
                 Assert.AreEqual<int>(10, underneathLayerFixture.NumberOfBalls);
                 subscription.Dispose();
                 newInstance.CheckBallChangedEvent(x => Assert.IsTrue(x));
@@ -67,7 +71,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
                 Disposed = true;
             }
 
-            public override void Start(int numberOfBalls, Action<IPosition, BusinessLogic.IBall> upperLayerHandler, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls, Action<IPosition, BusinessLogic.IBall> upperLayerHandler)
             {
                 NumberOfBalls = numberOfBalls;
                 Assert.IsNotNull(upperLayerHandler);
