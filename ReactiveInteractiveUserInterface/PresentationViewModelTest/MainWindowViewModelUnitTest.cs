@@ -75,7 +75,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
                 Disposed++;
             }
 
-            public override void Start(int numberOfBalls, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls)
             {
                 Started = numberOfBalls;
             }
@@ -123,7 +123,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
                 return eventObservable?.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
             }
 
-            public override void Start(int numberOfBalls, int borderWidth, int borderHeight)
+            public override void Start(int numberOfBalls)
             {
                 for (int i = 0; i < numberOfBalls; i++)
                 {
