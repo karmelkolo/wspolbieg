@@ -10,7 +10,6 @@
 
 using System.Diagnostics;
 using UnderneathLayerAPI = TP.ConcurrentProgramming.Data.DataAbstractAPI;
-using DataIBall = TP.ConcurrentProgramming.Data.IBall;
 
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
@@ -24,7 +23,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         internal BusinessLogicImplementation(UnderneathLayerAPI? underneathLayer)
         {
             layerBellow = underneathLayer == null ? UnderneathLayerAPI.GetDataLayer() : underneathLayer;
-            CollisionTimer = new Timer(CheckCollision, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(10));
         }
 
         #endregion ctor
@@ -35,106 +33,139 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
-            CollisionTimer.Dispose();
             layerBellow.Dispose();
             Disposed = true;
         }
 
-        public override void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler, int borderWidth, int borderHeight)
+        public override void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler)
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
             if (upperLayerHandler == null)
                 throw new ArgumentNullException(nameof(upperLayerHandler));
-            layerBellow.Start(numberOfBalls, (startingPosition, databall) => upperLayerHandler(new Position(startingPosition.x, startingPosition.y), new Ball(databall)), borderWidth, borderHeight);
+
+            lock (_lock)
+            {
+                _balls.Clear();
+            }
+
+            layerBellow.Start(numberOfBalls, (startingPosition, dataBall) =>
+            {
+                lock (_lock)
+                {
+                    if (!_balls.Contains(dataBall))
+                    {
+                        _balls.Add(dataBall);
+                        dataBall.NewPositionNotification += (sender, pos) => CheckCollision(sender, pos);
+                    }
+                }
+                upperLayerHandler(new Position(startingPosition.x, startingPosition.y), new Ball(dataBall));
+            });
         }
 
         #endregion BusinessLogicAbstractAPI
 
         #region private
 
-        private bool Disposed = false;
+        private readonly object _lock = new object();
+        private readonly List<Data.IBall> _balls = new();
+        private readonly double borderWidth = 390;
+        private readonly double borderHeight = 410;
 
+        private bool Disposed = false;
         private readonly UnderneathLayerAPI layerBellow;
 
-        private readonly Timer CollisionTimer;
-
-        private readonly object _collisionLock = new object();
-
-        private void CheckCollision(object? x)
+        private void CheckCollision(object? sender, Data.IVector newPosition)
         {
-                var balls = layerBellow.GetBalls();
+            if (sender is not Data.IBall ball1)
+            {
+                return;
+            }
+            CheckBorder(ball1);
 
-                BoundingBox boundary = new BoundingBox(200, 210, 200, 210);
-                Tree tree = new Tree(boundary, 4);
-
-                foreach (var ball in balls)
+            lock (_lock)
+            {
+                foreach (var ball2 in _balls)
                 {
-                    tree.Insert(ball);
-                }
-
-                foreach (var ball1 in balls)
-                {
-                    BoundingBox range = new BoundingBox(ball1.Position.x + 10, ball1.Position.y + 10, 20, 20);
-
-                    List<DataIBall> foundBalls = new List<DataIBall>();
-                    tree.Search(range, foundBalls);
-
-                    foreach (var ball2 in foundBalls)
+                    if (ball1 == ball2)
                     {
-                        if (ball1 == ball2)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
+                    CheckBalls(ball1, ball2);
+                }
+            }
+        }
 
-                        double distanceX = ball2.Position.x - ball1.Position.x;
-                        double distanceY = ball2.Position.y - ball1.Position.y;
-                        double distance = Math.Sqrt(distanceX * distanceX + distanceY * distanceY);
+        private void CheckBorder(Data.IBall ball)
+        {
+            var position = ball.Position;
+            var velocity = ball.Velocity;
 
-                        if (distance <= 20)
-                        {
-                            lock (_collisionLock)
-                            {
+            Data.Vector nextPosition = new(position.x + velocity.x, position.y + velocity.y);
 
-                                if (distance == 0) return; // Zabezpieczenie przed dzieleniem przez zero
+            if (nextPosition.x <= 0 || nextPosition.x >= borderWidth - ball.Diameter)
+            {
+                ball.Velocity = new Data.Vector(-velocity.x, velocity.y);
+                double clampedX = Math.Clamp(nextPosition.x, 0, borderWidth - ball.Diameter);
+                ball.Position = new Data.Vector(clampedX, nextPosition.y);
+            }
 
-                                // 3. Normalizujemy wektor (sprowadzamy jego długość do 1)
-                                distanceX /= distance;
-                                distanceY /= distance;
+            if (nextPosition.y <= 0 || nextPosition.y >= borderHeight - ball.Diameter)
+            {
+                ball.Velocity = new Data.Vector(velocity.x, -velocity.y);
+                double clampedY = Math.Clamp(nextPosition.y, 0, borderHeight - ball.Diameter);
+                ball.Position = new Data.Vector(nextPosition.x, clampedY);
+            }
+        }
 
-                                // 4. Wyliczamy wektor prędkości względnej
-                                double dvX = ball1.Velocity.x - ball2.Velocity.x;
-                                double dvY = ball1.Velocity.y - ball2.Velocity.y;
+        private void CheckBalls(Data.IBall b1, Data.IBall b2)
+        {
+            object firstLock = b1.GetHashCode() < b2.GetHashCode() ? b1 : b2;
+            object secondLock = b1.GetHashCode() < b2.GetHashCode() ? b2 : b1;
 
-                                // 5. Iloczyn skalarny prędkości i wektora normalnego 
-                                // (Określa, jak szybko kule zbliżają się do siebie wzdłuż osi uderzenia)
-                                double dotProduct = dvX * distanceX + dvY * distanceY;
+            lock (firstLock)
+            {
+                lock (secondLock)
+                {
+                    var p1 = b1.Position;
+                    var p2 = b2.Position;
 
-                                // Jeśli kule się oddalają (dotProduct < 0), nie robimy nic, 
-                                // aby zapobiec "sklejaniu się" kul w kolejnych klatkach.
-                                if (dotProduct < 0) return;
+                    double center1X = p1.x + b1.Diameter / 2;
+                    double center1Y = p1.y + b1.Diameter / 2;
+                    double center2X = p2.x + b2.Diameter / 2;
+                    double center2Y = p2.y + b2.Diameter / 2;
 
-                                // 6. Fizyka mas - założenie: każda kula ma masę 1 (chyba że dodałeś Mass do IBall)
-                                double mass1 = 1.0;
-                                double mass2 = 1.0;
+                    double dx = center1X - center2X;
+                    double dy = center1Y - center2Y;
+                    double distanceSquared = dx * dx + dy * dy;
 
-                                // Skalar impulsu (J)
-                                double impulse = (2 * dotProduct) / (mass1 + mass2);
+                    if (distanceSquared < 1.0) return;
+                    double minDistance = (b1.Diameter / 2) + (b2.Diameter / 2);
 
-                                // 7. Aplikujemy impuls do prędkości obu kul
-                                double newV1X = ball1.Velocity.x - impulse * mass2 * distanceX;
-                                double newV1Y = ball1.Velocity.y - impulse * mass2 * distanceY;
+                    if (distanceSquared < minDistance * minDistance)
+                    {
+                        var v1 = b1.Velocity;
+                        var v2 = b2.Velocity;
 
-                                double newV2X = ball2.Velocity.x + impulse * mass1 * distanceX;
-                                double newV2Y = ball2.Velocity.y + impulse * mass1 * distanceY;
+                        double relativeVelocityX = v1.x - v2.x;
+                        double relativeVelocityY = v1.y - v2.y;
 
-                                // 8. Przypisujemy nowe wektory (Tutaj wymagany jest set w interfejsie Velocity!)
-                                ball1.Velocity = new LogicVector(newV1X, newV1Y);
-                                ball2.Velocity = new LogicVector(newV2X, newV2Y);
-                            }
-                        }
+                        if ((relativeVelocityX * dx + relativeVelocityY * dy) > 0) return;
+
+                        double m1 = 10;
+                        double m2 = 10;
+                        double commonPart = 2 * (relativeVelocityX * dx + relativeVelocityY * dy) / ((m1 + m2) * distanceSquared);
+
+                        double v1x = v1.x - commonPart * m2 * dx;
+                        double v1y = v1.y - commonPart * m2 * dy;
+                        double v2x = v2.x + commonPart * m1 * dx;
+                        double v2y = v2.y + commonPart * m1 * dy;
+
+                        b1.Velocity = new Data.Vector(v1x, v1y);
+                        b2.Velocity = new Data.Vector(v2x, v2y);
                     }
                 }
+            }
         }
 
         #endregion private

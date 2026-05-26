@@ -14,49 +14,40 @@ namespace TP.ConcurrentProgramming.Data
 {
     internal class DataImplementation : DataAbstractAPI
     {
-        #region ctor
-
-        public DataImplementation()
-        {
-            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(30));
-        }
-
-        #endregion ctor
 
         #region DataAbstractAPI
 
-        public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler, int borderWidth, int borderHeight)
+        public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
         {
 
             if (Disposed)
                 throw new ObjectDisposedException(nameof(DataImplementation));
             if (upperLayerHandler == null)
                 throw new ArgumentNullException(nameof(upperLayerHandler));
-            lock (_lock)
+
+            cancelToken?.Cancel();
+            balls.Clear();
+
+            cancelToken = new CancellationTokenSource();
+
+            for (int i = 0; i < numberOfBalls; i++)
             {
-                BallsList.Clear();
-                Random random = new Random();
-                for (int i = 0; i < numberOfBalls; i++)
+                double diameter = 20;
+                Vector startingPos = new Vector(random.NextDouble() * (borderWidth - diameter), random.NextDouble() * (borderHeight - diameter));
+                Vector startingVel = new Vector(random.NextDouble() * 5, random.NextDouble() * 5);
+
+                if (startingVel.x == 0 && startingVel.y == 0)
                 {
-                    Vector startingPosition = new(random.Next(0, borderWidth - 20), random.Next(0, borderHeight - 20));
-                    Vector startingVelocity = new(random.Next(-5, 5), random.Next(-5, 5));
-                    if (startingVelocity.x == 0 && startingVelocity.y == 0)
-                    {
-                        startingVelocity = new(1, 1);
-                    }
-                    Ball newBall = new(startingPosition, startingVelocity, borderWidth, borderHeight);
-                    upperLayerHandler(startingPosition, newBall);
-                    BallsList.Add(newBall);
+                    startingVel = new(1, 1);
                 }
-            }
 
-        }
+                Ball newBall = new Ball(startingPos, startingVel, diameter);
 
-        public override IEnumerable<IBall> GetBalls()
-        {
-            lock (_lock)
-            {
-                return new List<IBall>(BallsList);
+                balls.Add(newBall);
+
+                upperLayerHandler(newBall.Position, newBall);
+
+                Task.Run(() => MoveBall(newBall, cancelToken.Token));
             }
         }
 
@@ -70,8 +61,10 @@ namespace TP.ConcurrentProgramming.Data
             {
                 if (disposing)
                 {
-                    MoveTimer.Dispose();
-                    BallsList.Clear();
+                    cancelToken?.Cancel();
+                    cancelToken?.Dispose();
+                    cancelToken = null;
+                    balls.Clear();
                 }
                 Disposed = true;
             }
@@ -90,21 +83,21 @@ namespace TP.ConcurrentProgramming.Data
 
         #region private
 
-        //private bool disposedValue;
         private bool Disposed = false;
 
-        private readonly Timer MoveTimer;
-        private List<Ball> BallsList = [];
-        private readonly object _lock = new object();
+        private readonly List<Ball> balls = new();
+        private readonly Random random = new();
+        private CancellationTokenSource? cancelToken;
 
-        private void Move(object? x)
+        private readonly double borderWidth = 390;
+        private readonly double borderHeight = 410;
+
+        private async Task MoveBall(Ball ball, CancellationToken cancel)
         {
-            lock (_lock)
+            while (!cancel.IsCancellationRequested)
             {
-                foreach (Ball item in BallsList)
-                {
-                    item.Move();
-                }
+                ball.Move();
+                await Task.Delay(16, cancel).ContinueWith(_ => { });
             }
         }
 
@@ -115,13 +108,13 @@ namespace TP.ConcurrentProgramming.Data
         [Conditional("DEBUG")]
         internal void CheckBallsList(Action<IEnumerable<IBall>> returnBallsList)
         {
-            returnBallsList(BallsList);
+            returnBallsList(balls);
         }
 
         [Conditional("DEBUG")]
         internal void CheckNumberOfBalls(Action<int> returnNumberOfBalls)
         {
-            returnNumberOfBalls(BallsList.Count);
+            returnNumberOfBalls(balls.Count);
         }
 
         [Conditional("DEBUG")]

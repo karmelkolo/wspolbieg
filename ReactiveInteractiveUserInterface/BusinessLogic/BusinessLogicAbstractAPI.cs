@@ -23,9 +23,9 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 
         #region Layer API
 
-        public static readonly Dimensions GetDimensions = new(10.0, 10.0, 10.0);
+        public static readonly Dimensions GetDimensions = new(800, 400, 10);
 
-        public abstract void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler, int borderWidth, int borderHeight);
+        public abstract void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler);
 
         #region IDisposable
 
@@ -62,8 +62,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic
     {
         event EventHandler<IPosition> NewPositionNotification;
 
-        IPosition Position { get; }
+        double Diameter { get; }
     }
-
-    internal readonly record struct LogicVector(double x, double y) : Data.IVector;
 }

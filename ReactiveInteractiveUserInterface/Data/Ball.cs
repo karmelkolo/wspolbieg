@@ -16,12 +16,11 @@ namespace TP.ConcurrentProgramming.Data
     {
         #region ctor
 
-        internal Ball(Vector initialPosition, Vector initialVelocity, int borderWidth, int borderHeight)
+        internal Ball(Vector initialPosition, Vector initialVelocity, double diameter)
         {
-            Position = initialPosition;
-            Velocity = initialVelocity;
-            BorderWidth = borderWidth;
-            BorderHeight = borderHeight;
+            _position = initialPosition;
+            _velocity = initialVelocity;
+            Diameter = diameter;
         }
 
         #endregion ctor
@@ -30,16 +29,25 @@ namespace TP.ConcurrentProgramming.Data
 
         public event EventHandler<IVector>? NewPositionNotification;
 
-        public IVector Velocity { get; set; }
+        public IVector Position
+        {
+            get { return _position; }
+            set { _position = (Vector)value; }
+        }
+        public IVector Velocity
+        {
+            get { return _velocity; }
+            set { _velocity = value; }
+        }
 
-        public IVector Position { get; set; }
+        public double Diameter { get; init; }
 
         #endregion IBall
 
         #region private
 
-        private int BorderWidth;
-        private int BorderHeight;
+        private Vector _position;
+        private IVector _velocity;
 
         private void RaiseNewPositionChangeNotification()
         {
@@ -48,22 +56,7 @@ namespace TP.ConcurrentProgramming.Data
 
         internal void Move()
         {
-            Vector nextPosition = new Vector(Position.x + Velocity.x, Position.y + Velocity.y);
-            if (nextPosition.x <= 0 || nextPosition.x >= BorderWidth - 20)
-            {
-                Velocity = new Vector(-Velocity.x, Velocity.y);
-                double clampedX = Math.Clamp(nextPosition.x, 0, BorderWidth - 20);
-                nextPosition = new(clampedX, nextPosition.y);
-            }
-
-            if (nextPosition.y <= 0 || nextPosition.y >= BorderHeight - 20)
-            {
-                Velocity = new Vector(Velocity.x, -Velocity.y);
-                double clampedY = Math.Clamp(nextPosition.y, 0, BorderHeight - 20);
-                nextPosition = new(nextPosition.x, clampedY);
-            }
-
-            Position = nextPosition;
+            _position = new Vector(_position.x +  _velocity.x, _position.y + _velocity.y);
             RaiseNewPositionChangeNotification();
         }
 
