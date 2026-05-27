@@ -9,9 +9,6 @@
 //_____________________________________________________________________________________________________________________________________
 
 using TP.ConcurrentProgramming.Data;
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
 {
@@ -64,16 +61,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             }
         }
 
-        // TEST USUNIĘTY: Metoda GetBalls() nie istnieje już w architekturze, 
-        // a niezawodny test na zderzenia znajduje się teraz w DataImplementationUnitTest
-        /*
-        [TestMethod]
-        public void ThreeBallsCollisionTest()
-        {
-            // ...
-        }
-        */
-
         #region testing instrumentation
 
         private class DataLayerConstructorFixcure : Data.DataAbstractAPI
@@ -85,8 +72,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             {
                 throw new NotImplementedException();
             }
-
-            // USUNIĘTO GetBalls()
         }
 
         private class DataLayerDisposeFixcure : Data.DataAbstractAPI
@@ -102,8 +87,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
             {
                 throw new NotImplementedException();
             }
-
-            // USUNIĘTO GetBalls()
         }
 
         private class DataLayerStartFixcure : Data.DataAbstractAPI

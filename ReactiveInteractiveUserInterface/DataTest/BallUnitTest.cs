@@ -28,12 +28,8 @@
             newInstance.Move();
 
             Assert.AreEqual<int>(1, numberOfCallBackCalled);
-            // Kula przesunęła się o wektor (5,5)
             Assert.AreEqual(15.0, curentPosition.x);
             Assert.AreEqual(15.0, curentPosition.y);
         }
-
-        // TESTY StayInBoundsTestMethod ORAZ BallDVDBounceTest USUNIĘTE: 
-        // Odbijaniem od ścian zajmuje się teraz DataImplementation, a nie Ball.
     }
 }
