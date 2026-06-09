@@ -92,11 +92,19 @@ namespace TP.ConcurrentProgramming.Data
         private readonly double borderWidth = 390;
         private readonly double borderHeight = 410;
 
+        private Logger logger = new();
+
         private async Task MoveBall(Ball ball, CancellationToken cancel)
         {
+            Stopwatch zegarek = new Stopwatch();
+            zegarek.Start();
             while (!cancel.IsCancellationRequested)
             {
-                ball.Move();
+                double deltaTime = zegarek.Elapsed.TotalSeconds;
+                zegarek.Restart();
+
+                ball.Move(deltaTime);
+                logger.Log(ball);
                 await Task.Delay(16, cancel).ContinueWith(_ => { });
             }
         }

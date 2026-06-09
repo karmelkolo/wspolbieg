@@ -54,9 +54,10 @@ namespace TP.ConcurrentProgramming.Data
             NewPositionNotification?.Invoke(this, Position);
         }
 
-        internal void Move()
+        internal void Move(double deltaTime)
         {
-            _position = new Vector(_position.x +  _velocity.x, _position.y + _velocity.y);
+            double multiplier = deltaTime * 50;
+            _position = new Vector(_position.x + _velocity.x * multiplier, _position.y + _velocity.y * multiplier);
             RaiseNewPositionChangeNotification();
         }
 
