@@ -132,5 +132,109 @@ namespace TP.ConcurrentProgramming.Data.Test
                     $"Oczekiwano, że 10k iteracji w sekcji krytycznej zajmie poniżej 200ms. Rzeczywisty czas: {elapsedMs:F2} ms");
             }
         }
+
+        [TestMethod]
+        public async Task MoveBall_RealTimeExecution_CallsMoveExpectedNumberOfTimes()
+        {
+            int moveCount = 0;
+
+            using (DataImplementation data = new DataImplementation())
+            {
+                data.Start(1, (pos, ball) =>
+                {
+                    ball.NewPositionNotification += (sender, args) =>
+                    {
+                        moveCount++;
+                    };
+                });
+
+                await Task.Delay(500);
+            }
+
+
+            Assert.IsTrue(moveCount >= 15, $"Pętla wykonała się za rzadko! Ilość wywołań w 500ms: {moveCount}. Sprawdź Task.Delay.");
+            Assert.IsTrue(moveCount <= 45, $"Pętla wykonała się za często! Ilość wywołań w 500ms: {moveCount}. Brakuje opóźnienia.");
+        }
+
+        [TestClass]
+        public class LoggerUnitTest
+        {
+            [TestMethod]
+            public async Task Logger_ConcurrentWrites_ShouldNotLoseData()
+            {
+                string tempFilePath = Path.GetTempFileName();
+                int numberOfTasks = 50;
+                int logsPerTask = 50;
+                int expectedTotalLogs = numberOfTasks * logsPerTask;
+
+                DummyBall dummyBall = new DummyBall();
+
+                try
+                {
+                    using (var logger = new Logger(tempFilePath))
+                    {
+                        List<Task> tasks = new List<Task>();
+                        for (int i = 0; i < numberOfTasks; i++)
+                        {
+                            tasks.Add(Task.Run(() =>
+                            {
+                                for (int j = 0; j < logsPerTask; j++)
+                                {
+                                    logger.Log(dummyBall);
+                                }
+                            }));
+                        }
+
+                        await Task.WhenAll(tasks);
+                        await Task.Delay(500);
+
+                    } 
+                    string[] fileLines = File.ReadAllLines(tempFilePath);
+                    Assert.AreEqual(expectedTotalLogs, fileLines.Length,
+                        "Logger zgubił dane przy wielowątkowości! Sprawdź implementację kolejki.");
+                }
+                finally
+                {
+                    if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+                }
+            }
+
+            [TestMethod]
+            public void Logger_Dispose_ClosesFileAndFlushesBuffer()
+            {
+                string tempFilePath = Path.GetTempFileName();
+                try
+                {
+                    var logger = new Logger(tempFilePath);
+                    logger.Log(new DummyBall());
+
+                    logger.Dispose();
+
+                    string[] lines = File.ReadAllLines(tempFilePath);
+
+                    Assert.AreEqual(1, lines.Length, "Dispose nie zrzucił danych na dysk lub nie zamknął pliku!");
+                }
+                finally
+                {
+                    if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+                }
+            }
+
+            #region Instrumentacja Testowa
+
+            private class DummyBall : IBall
+            {
+                public IVector Position { get; set; } = new DummyVector(10, 20);
+                public IVector Velocity { get; set; } = new DummyVector(0, 0);
+                public double Diameter { get; } = 20.0;
+                public event EventHandler<IVector>? NewPositionNotification;
+
+                public void Dispose() { }
+            }
+
+            private record DummyVector(double x, double y) : IVector;
+
+            #endregion
+        }
     }
 }

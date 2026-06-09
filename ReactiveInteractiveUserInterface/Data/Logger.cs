@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.IO;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -7,11 +8,17 @@ namespace TP.ConcurrentProgramming.Data
         private readonly ConcurrentQueue<string> _logsToWrite = new();
         private readonly Task _writeTask;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
-        private StreamWriter _logFile;
+        private readonly StreamWriter _logFile;
 
         public Logger()
         {
-            _logFile = new StreamWriter($"{DateTime.Now:dd-mm-yyyy_HH-mm-ss}.txt", append: true);
+            _logFile = new StreamWriter($"{DateTime.Now:dd-MM-yyyy_HH-mm-ss}_{Guid.NewGuid()}.txt", append: true);
+            _writeTask = Task.Run(Logging);
+        }
+
+        internal Logger(string filePath)
+        {
+            _logFile = new StreamWriter(filePath, append: true);
             _writeTask = Task.Run(Logging);
         }
 
@@ -39,7 +46,13 @@ namespace TP.ConcurrentProgramming.Data
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
-            _writeTask.Dispose();
+            _writeTask.Wait();
+            while (_logsToWrite.TryDequeue(out string message))
+            {
+                _logFile.WriteLine(message);
+            }
+
+            _logFile.Dispose();
         }
     }
 }

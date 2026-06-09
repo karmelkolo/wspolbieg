@@ -25,11 +25,36 @@
                 numberOfCallBackCalled++;
             };
 
-            newInstance.Move();
+            newInstance.Move(0.02);
 
             Assert.AreEqual<int>(1, numberOfCallBackCalled);
             Assert.AreEqual(15.0, curentPosition.x);
             Assert.AreEqual(15.0, curentPosition.y);
+        }
+
+        [TestMethod]
+        public void Move_CalledMultipleTimes_RaisesEventExactNumberOfTimes()
+        {
+            Vector startPosition = new Vector(0, 0);
+            Vector velocity = new Vector(1, 1);
+            Ball ball = new Ball(startPosition, velocity, 20.0);
+
+            int invocationCount = 0; 
+
+            ball.NewPositionNotification += (sender, position) =>
+            {
+                invocationCount++;
+            };
+
+            int numberOfMoves = 7;
+
+            for (int i = 0; i < numberOfMoves; i++)
+            {
+                ball.Move(0.016);
+            }
+
+            Assert.AreEqual(numberOfMoves, invocationCount,
+                $"Błąd! Oczekiwano {numberOfMoves} wywołań eventu, a było {invocationCount}.");
         }
     }
 }
